@@ -30,16 +30,8 @@
 #include "GateFunctors.hpp"
 #include "MeasuresFunctors.hpp"
 
-void print_InitArguments(const Kokkos::InitArguments a){
-    printf("<example.InitArguments with");
-    printf("\n num_threads = %d", a.num_threads);
-    printf("\n num_numa = %d", a.num_numa);
-    printf("\n device_id = %d", a.device_id);
-    printf("\n ndevices = %d", a.ndevices);
-    printf("\n skip_device = %d", a.skip_device);
-    printf("\n disable_warnings = %d>\n", a.disable_warnings);
-}
-
+std::string repr_InitArguments(const Kokkos::InitArguments &a);
+void print_InitArguments(const Kokkos::InitArguments &a);
 
 /// @cond DEV
 namespace {
@@ -88,7 +80,6 @@ template <class Precision> class StateVectorKokkos {
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
     StateVectorKokkos() = delete;
-    // StateVectorKokkos(size_t num_qubits, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){1})
     StateVectorKokkos(size_t num_qubits, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){})
         : gates_{
                 //Identity
@@ -451,13 +442,6 @@ template <class Precision> class StateVectorKokkos {
             if (counts_ == 0 and !Kokkos::is_initialized()) {
                 printf("Kokkos::initialize!\n");
                 print_InitArguments(kokkos_args);
-                // Kokkos::InitArguments args;
-                // 8 (CPU) threads per NUMA region
-                // args.num_threads = 1;
-                // 2 (CPU) NUMA regions per process
-                // args.num_numa = -1;
-                // If Kokkos was built with CUDA enabled, use the GPU with device ID 1.
-                // args.device_id = 1;
                 Kokkos::initialize(kokkos_args);
             }
             counts_++;

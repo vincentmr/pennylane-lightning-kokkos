@@ -47,6 +47,7 @@ from ._version import __version__
 # from .lightning_kokkos_qubit_ops import the_answer
 # print(the_answer)
 from .lightning_kokkos_qubit_ops import kokkos_start, kokkos_end
+from .lightning_kokkos_qubit_ops import InitArguments
 from .lightning_kokkos_qubit_ops import LightningKokkos_C128
 from .lightning_kokkos_qubit_ops import LightningKokkos_C64
 from .lightning_kokkos_qubit_ops import AdjointJacobianKokkos_C128
@@ -93,9 +94,14 @@ class LightningKokkos(LightningQubit):
         "Identity",
     }
 
-    def __init__(self, wires, *, sync=True, c_dtype=np.complex128, shots=None, batch_obs=False):
+    def __init__(self, wires, *, sync=True, c_dtype=np.complex128, shots=None, batch_obs=False, kokkos_args=InitArguments(2)):
         super().__init__(wires, c_dtype=c_dtype, shots=shots)
-        self._kokkos_state = _kokkos_dtype(self._state.dtype)(self._state)
+        if kokkos_args is None:
+            self._kokkos_state = _kokkos_dtype(self._state.dtype)(self._state)
+        else:
+            print("kokkos in Python")
+            print(kokkos_args)
+            self._kokkos_state = _kokkos_dtype(self._state.dtype)(self._state, kokkos_args)
         self._sync = sync
 
     def reset(self):
