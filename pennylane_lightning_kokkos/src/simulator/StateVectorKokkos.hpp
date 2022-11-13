@@ -433,15 +433,13 @@ template <class Precision> class StateVectorKokkos {
                 std::forward<decltype(params)>(params));
         };
 
-        // printf("Initialize with StateVectorKokkos(num_qubits)!\n");
         num_qubits_ = num_qubits;
         length_ = Pennylane::Util::exp2(num_qubits);
 
         {
             const std::lock_guard<std::mutex> lock(counts_mutex_);
             if (counts_ == 0 and !Kokkos::is_initialized()) {
-                printf("Kokkos::initialize!\n");
-                print_InitArguments(kokkos_args);
+                // print_InitArguments(kokkos_args);
                 Kokkos::initialize(kokkos_args);
             }
             counts_++;
@@ -524,7 +522,6 @@ template <class Precision> class StateVectorKokkos {
      */
     StateVectorKokkos(Kokkos::complex<Precision> *hostdata_, size_t length, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){})
         : StateVectorKokkos(Util::log2(length), kokkos_args) {
-        // printf("Initialize with StateVectorKokkos(*hostdata_, length)!\n");
         HostToDevice(hostdata_, length);
     }
 
@@ -535,7 +532,6 @@ template <class Precision> class StateVectorKokkos {
      */
     StateVectorKokkos(const StateVectorKokkos &other, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){})
         : StateVectorKokkos(other.getNumQubits(), kokkos_args) {
-        // printf("Initialize with StateVectorKokkos(StateVectorKokkos &)!\n");
         this->DeviceToDevice(other.getData());
     }
 
