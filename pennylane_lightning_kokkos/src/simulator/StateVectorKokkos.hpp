@@ -30,6 +30,17 @@
 #include "GateFunctors.hpp"
 #include "MeasuresFunctors.hpp"
 
+void print_InitArguments(const Kokkos::InitArguments a){
+    printf("<example.InitArguments with");
+    printf("\n num_threads = %d", a.num_threads);
+    printf("\n num_numa = %d", a.num_numa);
+    printf("\n device_id = %d", a.device_id);
+    printf("\n ndevices = %d", a.ndevices);
+    printf("\n skip_device = %d", a.skip_device);
+    printf("\n disable_warnings = %d>\n", a.disable_warnings);
+}
+
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
@@ -77,7 +88,8 @@ template <class Precision> class StateVectorKokkos {
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
     StateVectorKokkos() = delete;
-    StateVectorKokkos(size_t num_qubits)
+    // StateVectorKokkos(size_t num_qubits, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){1})
+    StateVectorKokkos(size_t num_qubits, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){})
         : gates_{
                 //Identity
                  {"PauliX", 
@@ -430,13 +442,23 @@ template <class Precision> class StateVectorKokkos {
                 std::forward<decltype(params)>(params));
         };
 
+        printf("Initialize with StateVectorKokkos(num_qubits)!\n");
         num_qubits_ = num_qubits;
         length_ = Pennylane::Util::exp2(num_qubits);
 
         {
             const std::lock_guard<std::mutex> lock(counts_mutex_);
             if (counts_ == 0 and !Kokkos::is_initialized()) {
-                Kokkos::initialize();
+                printf("Kokkos::initialize!\n");
+                print_InitArguments(kokkos_args);
+                // Kokkos::InitArguments args;
+                // 8 (CPU) threads per NUMA region
+                // args.num_threads = 1;
+                // 2 (CPU) NUMA regions per process
+                // args.num_numa = -1;
+                // If Kokkos was built with CUDA enabled, use the GPU with device ID 1.
+                // args.device_id = 1;
+                Kokkos::initialize(kokkos_args);
             }
             counts_++;
         }
@@ -516,8 +538,9 @@ template <class Precision> class StateVectorKokkos {
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(Kokkos::complex<Precision> *hostdata_, size_t length)
-        : StateVectorKokkos(Util::log2(length)) {
+    StateVectorKokkos(Kokkos::complex<Precision> *hostdata_, size_t length, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){})
+        : StateVectorKokkos(Util::log2(length), kokkos_args) {
+        printf("Initialize with StateVectorKokkos(*hostdata_, length)!\n");
         HostToDevice(hostdata_, length);
     }
 
@@ -526,8 +549,9 @@ template <class Precision> class StateVectorKokkos {
      *
      * @param other Another state vector
      */
-    StateVectorKokkos(const StateVectorKokkos &other)
-        : StateVectorKokkos(other.getNumQubits()) {
+    StateVectorKokkos(const StateVectorKokkos &other, Kokkos::InitArguments kokkos_args = (Kokkos::InitArguments){})
+        : StateVectorKokkos(other.getNumQubits(), kokkos_args) {
+        printf("Initialize with StateVectorKokkos(StateVectorKokkos &)!\n");
         this->DeviceToDevice(other.getData());
     }
 

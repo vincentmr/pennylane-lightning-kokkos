@@ -44,6 +44,9 @@ import pennylane as qml
 from ._version import __version__
 
 # try:
+# from .lightning_kokkos_qubit_ops import the_answer
+# print(the_answer)
+from .lightning_kokkos_qubit_ops import kokkos_start, kokkos_end
 from .lightning_kokkos_qubit_ops import LightningKokkos_C128
 from .lightning_kokkos_qubit_ops import LightningKokkos_C64
 from .lightning_kokkos_qubit_ops import AdjointJacobianKokkos_C128

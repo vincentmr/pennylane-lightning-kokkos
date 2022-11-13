@@ -37,6 +37,8 @@ using std::vector;
 
 namespace py = pybind11;
 
+void print_InitArguments(const Kokkos::InitArguments &a);
+
 /**
  * @brief Templated class to build all required precisions for Python module.
  *
@@ -68,6 +70,13 @@ void StateVectorKokkos_class_bindings(py::module &m) {
             return new StateVectorKokkos<PrecisionT>(
                 data_ptr, static_cast<std::size_t>(arr.size()));
         }))
+        // .def(py::init([](const np_arr_c &arr, const InitArguments &kokkos_args) {
+        //     py::buffer_info numpyArrayInfo = arr.request();
+        //     auto *data_ptr =
+        //         static_cast<Kokkos::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+        //     return new StateVectorKokkos<PrecisionT>(
+        //         data_ptr, static_cast<std::size_t>(arr.size()));
+        // }))
         .def(
             "Identity",
             []([[maybe_unused]] StateVectorKokkos<PrecisionT> &sv,
@@ -714,6 +723,16 @@ void StateVectorKokkos_class_bindings(py::module &m) {
              });
 }
 
+void print_InitArguments(const Kokkos::InitArguments a){
+    printf("<example.InitArguments with");
+    printf("\n num_threads = %d", a.num_threads);
+    printf("\n num_numa = %d", a.num_numa);
+    printf("\n device_id = %d", a.device_id);
+    printf("\n ndevices = %d", a.ndevices);
+    printf("\n skip_device = %d", a.skip_device);
+    printf("\n disable_warnings = %d>\n", a.disable_warnings);
+}
+
 // Necessary to avoid mangled names when manually building module
 // due to CUDA & LTO incompatibility issues.
 extern "C" {
@@ -732,8 +751,32 @@ PYBIND11_MODULE(lightning_kokkos_qubit_ops, // NOLINT: No control over
     StateVectorKokkos_class_bindings<float, float>(m);
     StateVectorKokkos_class_bindings<double, double>(m);
 
-    m.def("kokkos_start", []() { Kokkos::initialize(); });
-    m.def("kokkos_end", []() { Kokkos::finalize(); });
+    m.def("kokkos_start", []() { printf("Kokkos::initialize\n"); Kokkos::initialize(); });
+    m.def("kokkos_end", []() { printf("Kokkos::finalize\n"); Kokkos::finalize(); });
+
+    // m.attr("the_answer") = 42;
+    // m.attr("InitArguments") = (Kokkos::InitArguments){};
+    // py::class_<Kokkos::InitArguments>(m, "KokkosInitArguments");
+
+    py::class_<Kokkos::InitArguments>(m, "InitArguments")
+            .def(py::init<const int &>())
+        // .def(py::init<const int & x0 = 1,
+        //                 const int & x1 = 0,
+        //                 const int & x2 = 0,
+        //                 const int & x3 = 0,
+        //                 const int & x4 = 0,
+        //                 const bool & x5 = false>())
+        .def("__repr__", [](const Kokkos::InitArguments &a) {
+            std::string str;
+            str = "<example.InitArguments with";
+            str += "\n num_threads = " + std::to_string(a.num_threads);
+            str += "\n num_numa = " + std::to_string(a.num_numa);
+            str += "\n device_id = " + std::to_string(a.device_id);
+            str += "\n ndevices = " + std::to_string(a.ndevices);
+            str += "\n skip_device = " + std::to_string(a.skip_device);
+            str += "\n disable_warnings = " + std::to_string(a.disable_warnings) += "\n>";
+            return str;
+        });
 }
 }
 
