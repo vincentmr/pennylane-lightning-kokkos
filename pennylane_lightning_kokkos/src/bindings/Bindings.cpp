@@ -743,6 +743,7 @@ PYBIND11_MODULE(lightning_kokkos_qubit_ops, // NOLINT: No control over
     m.def("kokkos_end", []() { printf("Kokkos::finalize\n"); Kokkos::finalize(); });
 
     py::class_<Kokkos::InitArguments>(m, "InitArguments")
+        .def(py::init<>())
         .def(py::init<const int &>())
         .def_readwrite("num_threads", &Kokkos::InitArguments::num_threads)
         .def_readwrite("num_numa", &Kokkos::InitArguments::num_numa)
