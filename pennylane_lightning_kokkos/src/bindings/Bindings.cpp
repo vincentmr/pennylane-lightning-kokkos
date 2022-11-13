@@ -739,8 +739,8 @@ PYBIND11_MODULE(lightning_kokkos_qubit_ops, // NOLINT: No control over
     StateVectorKokkos_class_bindings<float, float>(m);
     StateVectorKokkos_class_bindings<double, double>(m);
 
-    m.def("kokkos_start", []() { printf("Kokkos::initialize\n"); Kokkos::initialize(); });
-    m.def("kokkos_end", []() { printf("Kokkos::finalize\n"); Kokkos::finalize(); });
+    m.def("kokkos_start", []() { Kokkos::initialize(); });
+    m.def("kokkos_end", []() { Kokkos::finalize(); });
 
     py::class_<Kokkos::InitArguments>(m, "InitArguments")
         .def(py::init<>())
